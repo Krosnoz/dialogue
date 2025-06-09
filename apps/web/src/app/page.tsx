@@ -1,5 +1,6 @@
 "use client";
-import { trpc } from "@/utils/trpc";
+
+import { useTRPC } from "@/utils/trpc";
 import { useQuery } from "@tanstack/react-query";
 
 const TITLE_TEXT = `
@@ -19,6 +20,7 @@ const TITLE_TEXT = `
  `;
 
 export default function Home() {
+	const trpc = useTRPC();
 	const healthCheck = useQuery(trpc.healthCheck.queryOptions());
 
 	return (

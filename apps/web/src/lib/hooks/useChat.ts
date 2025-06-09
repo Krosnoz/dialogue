@@ -1,10 +1,6 @@
-import {
-	type LocalConversation,
-	type LocalMessage,
-	localDb,
-} from "@/lib/db/local";
+import { localDb } from "@/lib/db/local";
 import { useUIStore } from "@/lib/stores/ui";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -13,8 +9,8 @@ export function useChat(conversationId: string | null) {
 	const { setStreamingMessageId, streamingMessageId } = useUIStore();
 	const [currentResponse, setCurrentResponse] = useState("");
 	const responseRef = useRef("");
+	const trpc = useTRPC();
 
-	// Récupérer les messages locaux en temps réel
 	const localMessages = useLiveQuery(
 		() =>
 			conversationId
@@ -28,7 +24,6 @@ export function useChat(conversationId: string | null) {
 
 	const { data: serverMessages } = useQuery(
 		trpc.chat.getMessages.queryOptions(
-			// biome-ignore lint/style/noNonNullAssertion: <explanation>
 			{ conversationId: conversationId! },
 			{
 				enabled: !!conversationId,
@@ -37,7 +32,6 @@ export function useChat(conversationId: string | null) {
 		),
 	);
 
-	// Synchroniser les messages du serveur avec la DB locale
 	useEffect(() => {
 		if (serverMessages?.length && conversationId) {
 			const syncMessages = async () => {

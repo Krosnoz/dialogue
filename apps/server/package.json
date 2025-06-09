@@ -3,25 +3,22 @@
 	"main": "src/index.ts",
 	"type": "module",
 	"scripts": {
-		"build": "tsc && tsc-alias",
-		"check-types": "tsc --noEmit",
-		"compile": "bun build --compile --minify --sourcemap --bytecode ./src/index.ts --outfile server",
+		"init": "cd ../.. && shx cp apps/server/.env.example apps/server/.env",
+		"build": "cd ../.. && tsc --project apps/server/tsconfig.json && tsc-alias -p apps/server/tsconfig.json",
+		"check-types": "cd ../.. && tsc --noEmit -p apps/server",
 		"dev": "bun run --hot src/index.ts",
-		"start": "bun run dist/src/index.js",
-		"db:migrate": "drizzle-kit migrate"
+		"start": "bun run dist/src/index.js"
 	},
 	"dependencies": {
 		"@dialogue/auth": "workspace:*",
 		"@dialogue/db": "workspace:*",
 		"dotenv": "^16.4.7",
 		"zod": "^3.25.16",
-		"@trpc/server": "^11.0.0",
+		"@trpc/server": "^11.3.1",
 		"@hono/trpc-server": "^0.3.4",
 		"hono": "^4.7.6"
 	},
 	"devDependencies": {
-		"tsc-alias": "^1.8.11",
-		"typescript": "^5.8.2",
 		"@types/bun": "^1.2.6"
 	}
 }

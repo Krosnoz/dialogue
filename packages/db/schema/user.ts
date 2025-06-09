@@ -6,7 +6,6 @@ export const user = pgTable("user", {
 	email: text("email").notNull().unique(),
 	emailVerified: boolean("email_verified").notNull().default(false),
 	image: text("image"),
-	subscriptionStatus: text("subscription_status").default("free"),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
 	updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -47,17 +46,8 @@ export const verification = pgTable("verification", {
 	identifier: text("identifier").notNull(),
 	value: text("value").notNull(),
 	expiresAt: timestamp("expires_at").notNull(),
-	createdAt: timestamp("created_at").defaultNow(),
-	updatedAt: timestamp("updated_at").defaultNow(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export type UserTypeSelect = typeof user.$inferSelect;
-export type UserTypeInsert = typeof user.$inferInsert;
-
-export type SessionTypeSelect = typeof session.$inferSelect;
-export type SessionTypeInsert = typeof session.$inferInsert;
-
-export type AccountTypeSelect = typeof account.$inferSelect;
-export type AccountTypeInsert = typeof account.$inferInsert;
-
-export type VerificationTypeSelect = typeof verification.$inferSelect;

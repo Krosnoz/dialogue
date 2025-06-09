@@ -10,32 +10,6 @@ This document outlines the tasks required to implement the T3 Chat application b
 
 ---
 
-## Milestone 1: Project Setup & Core Infrastructure (1-2 days)
-
-### 1.1. Monorepo & Tooling
-- [X] Configure `turbo.json` for the new `packages/db` and `packages/types`.
-- [X] Verify `biome.json` is configured correctly for the entire monorepo.
-- [X] Create `packages/db` and `packages/types` directories.
-- [X] Create `package.json` files for the new packages.
-
-### 1.2. Database (Neon + Drizzle)
-- [X] Set up a new project on Neon.
-- [X] Add `DATABASE_URL` to environment variables (`.env`).
-- [X] In `packages/db`, install `drizzle-orm`, `@neondatabase/serverless`, and `drizzle-kit`.
-- [X] Create schema files in `packages/db/schema/` for `users`, `accounts`, `sessions`, `subscriptions`, and `usage`.
-- [X] Create a `drizzle.config.ts` in `packages/db`.
-- [X] Run initial Drizzle migrations to create database tables.
-- [X] Move any existing schema from `apps/server/src/db/schema` to `packages/db/schema` and refactor.
-
-### 1.3. Authentication (Better-Auth)
-- [X] Install `better-auth` in `apps/web`.
-- [X] Create auth configuration file: `apps/web/src/lib/auth/config.ts`.
-- [X] Configure the `drizzleAdapter` to use the schema from `packages/db`.
-- [X] Set up auth API routes: `apps/web/src/app/api/auth/[...auth]/route.ts`.
-- [X] Implement auth middleware in `apps/web/middleware.ts`.
-
----
-
 ## Milestone 2: Local Storage & Core App Logic (2-3 days)
 
 ### 2.1. Local Storage (Dexie.js)

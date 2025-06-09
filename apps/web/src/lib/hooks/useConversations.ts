@@ -1,12 +1,13 @@
 import { type LocalConversation, localDb } from "@/lib/db/local";
 import { useUIStore } from "@/lib/stores/ui";
-import { trpc } from "@/utils/trpc";
+import { useTRPC } from "@/utils/trpc";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useCallback, useEffect } from "react";
 
 export function useConversations() {
 	const { setCurrentConversationId } = useUIStore();
+	const trpc = useTRPC();
 
 	const localConversations = useLiveQuery(
 		() => localDb.conversations.orderBy("updatedAt").reverse().toArray(),
@@ -21,16 +22,10 @@ export function useConversations() {
 
 	const createConversationMutation = useMutation(
 		trpc.chat.createConversation.mutationOptions({
-			onSuccess: async (newConversation: {
-				id: string;
-				userId: string;
-				title: string;
-				createdAt: string;
-				updatedAt: string;
-			}) => {
+			onSuccess: async (newConversation) => {
 				await localDb.conversations.put({
 					id: newConversation.id,
-					userId: newConversation.userId,
+					projectId: newConversation.projectId,
 					title: newConversation.title,
 					createdAt: new Date(newConversation.createdAt),
 					updatedAt: new Date(newConversation.updatedAt),
@@ -59,11 +54,11 @@ export function useConversations() {
 			const syncConversations = async () => {
 				for (const serverConversation of serverConversations) {
 					await localDb.conversations.put({
-						id: serverConversation.id,
-						userId: serverConversation.userId,
-						title: serverConversation.title,
-						createdAt: new Date(serverConversation.createdAt),
-						updatedAt: new Date(serverConversation.updatedAt),
+						id: serverConversation.conversation.id,
+						projectId: serverConversation.conversation.projectId,
+						title: serverConversation.conversation.title,
+						createdAt: new Date(serverConversation.conversation.createdAt),
+						updatedAt: new Date(serverConversation.conversation.updatedAt),
 						syncStatus: "synced",
 					});
 				}
@@ -78,7 +73,7 @@ export function useConversations() {
 				const tempId = `temp-${Date.now()}`;
 				const tempConversation: LocalConversation = {
 					id: tempId,
-					userId: "temp-user",
+					projectId: "temp-project",
 					title,
 					createdAt: new Date(),
 					updatedAt: new Date(),

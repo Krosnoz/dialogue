@@ -1,7 +1,5 @@
-import { createAuthClient as createBetterAuthClient } from "better-auth/client";
+import { createAuthClient } from "better-auth/react";
 
-export function createAuthClient(baseURL: string) {
-	return createBetterAuthClient({
-		baseURL,
-	});
-}
+export const authClient = createAuthClient({
+	baseURL: process.env.NEXT_PUBLIC_SERVER_URL || "http://localhost:3000",
+});
