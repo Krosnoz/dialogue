@@ -1,0 +1,7 @@
+services:
+  cache:
+    image: redis:8-alpine
+    container_name: dialogue-cache
+    restart: unless-stopped
+    ports:
+      - "6379:6379"

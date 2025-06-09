@@ -1,0 +1,11 @@
+{
+	"name": "@dialogue/docker",
+	"version": "0.0.0",
+	"private": true,
+	"scripts": {
+		"dev": "bun run docker:reset",
+		"docker:up": "docker-compose --project-name dialogue up -d",
+		"docker:down": "docker-compose --project-name dialogue down",
+		"docker:reset": "docker-compose --project-name dialogue down -v && bun docker:up"
+	}
+}

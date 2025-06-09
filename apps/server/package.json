@@ -1,0 +1,29 @@
+{
+	"name": "server",
+	"main": "src/index.ts",
+	"type": "module",
+	"scripts": {
+		"init": "shx cp .env.example .env",
+		"build": "tsc && tsc-alias",
+		"check-types": "tsc --noEmit",
+		"dev": "bun scripts/dev.ts",
+		"start": "bun scripts/start.ts"
+	},
+	"dependencies": {
+		"@dialogue/api": "workspace:*",
+		"@dialogue/auth": "workspace:*",
+		"@dialogue/db": "workspace:*",
+		"@dialogue/types": "workspace:*",
+		"@hono/trpc-server": "^0.3.4",
+		"@sentry/node": "^9.27.0",
+		"hono": "^4.7.6",
+		"zod": "^3.25.16",
+		"dotenv": "^16.5.0"
+	},
+	"devDependencies": {
+		"@types/bun": "^1.2.6",
+		"cross-env": "^7.0.3",
+		"kill-port": "^2.0.1",
+		"nodemon": "^3.1.4"
+	}
+}

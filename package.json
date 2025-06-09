@@ -1,0 +1,40 @@
+{
+	"name": "dialogue",
+	"devDependencies": {
+		"@biomejs/biome": "1.9.4",
+		"husky": "^9.1.7",
+		"lint-staged": "^15.5.0",
+		"shx": "^0.4.0",
+		"tsc-alias": "^1.8.16",
+		"turbo": "^2.4.2",
+		"typescript": "^5.8.3"
+	},
+	"lint-staged": {
+		"*.{js,ts,cjs,mjs,d.cts,d.mts,jsx,tsx,json,jsonc}": [
+			"biome check --write ."
+		]
+	},
+	"packageManager": "bun@1.2.8",
+	"private": true,
+	"scripts": {
+		"check": "biome check --write .",
+		"prepare": "husky",
+		"dev": "turbo dev",
+		"build": "turbo build",
+		"build:web": "turbo -F web build",
+		"build:server": "turbo -F server build",
+		"start": "turbo start",
+		"start:web": "turbo -F web start",
+		"start:server": "turbo -F server start",
+		"check-types": "turbo check-types",
+		"dev:native": "turbo -F native dev",
+		"dev:web": "turbo -F web dev",
+		"dev:server": "turbo -F server dev",
+		"db:push": "cd packages/db && bun run db:push",
+		"db:studio": "cd packages/db && bun run db:studio",
+		"db:generate": "cd packages/db && bun run db:generate",
+		"db:reset": "cd packages/db && bun run db:reset",
+		"db:branch": "cd packages/db && bun run db:branch"
+	},
+	"workspaces": ["apps/*", "packages/*"]
+}

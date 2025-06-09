@@ -1,0 +1,31 @@
+{
+	"name": "@dialogue/api",
+	"version": "0.1.0",
+	"private": true,
+	"main": "./index.ts",
+	"types": "./index.ts",
+	"exports": {
+		".": "./index.ts",
+		"./client": "./src/client.ts",
+		"./provider": "./src/provider.tsx",
+		"./server": "./src/server.ts",
+		"./errors": "./src/errors/index.ts"
+	},
+	"scripts": {
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"@ai-sdk/anthropic": "^1.2.12",
+		"@ai-sdk/google": "^1.2.19",
+		"@ai-sdk/openai": "^1.3.22",
+		"@dialogue/auth": "workspace:*",
+		"@dialogue/types": "workspace:*",
+		"@tanstack/react-query": "^5.80.7",
+		"@trpc/client": "^11.4.1",
+		"@trpc/tanstack-react-query": "^11.4.1",
+		"@trpc/server": "^11.4.1",
+		"react": "^19.0.0",
+		"ai": "^4.3.16",
+		"dotenv": "^16.5.0"
+	}
+}
