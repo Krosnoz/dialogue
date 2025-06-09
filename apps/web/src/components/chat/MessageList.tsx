@@ -26,6 +26,8 @@ export function MessageList({
 			conversationId: "",
 			role: "assistant",
 			content: currentResponse,
+			metadata: null,
+			tokens: null,
 			createdAt: new Date(),
 			syncStatus: "pending",
 		} as LocalMessage);

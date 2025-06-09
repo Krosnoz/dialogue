@@ -62,7 +62,7 @@ export function MessageInput({
 					value={content}
 					onChange={(e) => setContent(e.target.value)}
 					onKeyDown={handleKeyDown}
-					placeholder="Tapez votre message... (Entrée pour envoyer, Maj+Entrée pour nouvelle ligne)"
+					placeholder="Type your message... (Enter to send, Shift+Enter for new line)"
 					disabled={isDisabled}
 					className="max-h-32 min-h-[44px] resize-none pr-12"
 					rows={1}

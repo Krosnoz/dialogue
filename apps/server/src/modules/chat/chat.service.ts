@@ -8,25 +8,112 @@ import type {
 	CreateConversationDto,
 	CreateMessageDto,
 	CreateMessageStreamDto,
+	CreateProjectDto,
 	DeleteConversationDto,
 	GetMessagesDto,
+	ProjectParamsDto,
+	UpdateProjectDto,
 } from "./dto";
 
 export class ChatService {
-	async listConversations(userId: string) {
+	async listProjects(userId: string) {
+		return await db
+			.select()
+			.from(project)
+			.where(eq(project.userId, userId))
+			.orderBy(desc(project.updatedAt));
+	}
+
+	async createProject(input: CreateProjectDto, userId: string) {
+		const [projectInDb] = await db
+			.insert(project)
+			.values({
+				userId,
+				title: input.title,
+				description: input.description,
+			})
+			.returning();
+
+		return projectInDb;
+	}
+
+	async updateProject(input: UpdateProjectDto, userId: string) {
+		const [updatedProject] = await db
+			.update(project)
+			.set({
+				title: input.title,
+				description: input.description,
+				isArchived: input.isArchived,
+				updatedAt: new Date(),
+			})
+			.where(and(eq(project.id, input.projectId), eq(project.userId, userId)))
+			.returning();
+
+		if (!updatedProject) {
+			throw new TRPCError({
+				code: "NOT_FOUND",
+				message: "Project not found",
+			});
+		}
+
+		return updatedProject;
+	}
+
+	async deleteProject(input: ProjectParamsDto, userId: string) {
+		const result = await db
+			.delete(project)
+			.where(and(eq(project.id, input.projectId), eq(project.userId, userId)))
+			.returning();
+
+		if (!result.length) {
+			throw new TRPCError({
+				code: "NOT_FOUND",
+				message: "Project not found",
+			});
+		}
+
+		return { success: true };
+	}
+
+	async listConversations(projectId: string, userId: string) {
+		const projectExists = await db
+			.select()
+			.from(project)
+			.where(and(eq(project.id, projectId), eq(project.userId, userId)))
+			.limit(1);
+
+		if (!projectExists.length) {
+			throw new TRPCError({
+				code: "NOT_FOUND",
+				message: "Project not found",
+			});
+		}
+
 		return await db
 			.select()
 			.from(conversation)
-			.innerJoin(project, eq(conversation.projectId, project.id))
-			.where(eq(project.userId, userId))
+			.where(eq(conversation.projectId, projectId))
 			.orderBy(desc(conversation.updatedAt));
 	}
 
 	async createConversation(input: CreateConversationDto, userId: string) {
+		const projectExists = await db
+			.select()
+			.from(project)
+			.where(and(eq(project.id, input.projectId), eq(project.userId, userId)))
+			.limit(1);
+
+		if (!projectExists.length) {
+			throw new TRPCError({
+				code: "NOT_FOUND",
+				message: "Project not found",
+			});
+		}
+
 		const [conversationInDb] = await db
 			.insert(conversation)
 			.values({
-				projectId: userId,
+				projectId: input.projectId,
 				title: input.title,
 			})
 			.returning();
@@ -59,6 +146,7 @@ export class ChatService {
 		const conversationInDb = await db
 			.select()
 			.from(conversation)
+			.innerJoin(project, eq(conversation.projectId, project.id))
 			.where(
 				and(
 					eq(conversation.id, input.conversationId),
@@ -77,7 +165,7 @@ export class ChatService {
 		const [userMessage] = await db
 			.insert(message)
 			.values({
-				conversationId: conversationInDb[0].id,
+				conversationId: conversationInDb[0].conversation.id,
 				role: "user",
 				content: input.content,
 			})
@@ -88,7 +176,7 @@ export class ChatService {
 		const [assistantMessage] = await db
 			.insert(message)
 			.values({
-				conversationId: conversationInDb[0].id,
+				conversationId: conversationInDb[0].conversation.id,
 				role: "assistant",
 				content: aiResponse,
 			})
@@ -113,6 +201,7 @@ export class ChatService {
 					const conversationInDb = await db
 						.select()
 						.from(conversation)
+						.innerJoin(project, eq(conversation.projectId, project.id))
 						.where(
 							and(
 								eq(conversation.id, input.conversationId),
@@ -131,7 +220,7 @@ export class ChatService {
 					const [userMessage] = await db
 						.insert(message)
 						.values({
-							conversationId: conversationInDb[0].id,
+							conversationId: conversationInDb[0].conversation.id,
 							role: "user",
 							content: input.content,
 						})
@@ -163,7 +252,7 @@ export class ChatService {
 					const [assistantMessage] = await db
 						.insert(message)
 						.values({
-							conversationId: conversationInDb[0].id,
+							conversationId: conversationInDb[0].conversation.id,
 							role: "assistant",
 							content: aiResponse,
 						})
@@ -193,22 +282,28 @@ export class ChatService {
 	}
 
 	async deleteConversation(input: DeleteConversationDto, userId: string) {
-		const result = await db
-			.delete(conversation)
+		const conversationExists = await db
+			.select()
+			.from(conversation)
+			.innerJoin(project, eq(conversation.projectId, project.id))
 			.where(
 				and(
 					eq(conversation.id, input.conversationId),
 					eq(project.userId, userId),
 				),
 			)
-			.returning();
+			.limit(1);
 
-		if (!result.length) {
+		if (!conversationExists.length) {
 			throw new TRPCError({
 				code: "NOT_FOUND",
 				message: "Conversation not found",
 			});
 		}
+
+		await db
+			.delete(conversation)
+			.where(eq(conversation.id, input.conversationId));
 
 		return { success: true };
 	}

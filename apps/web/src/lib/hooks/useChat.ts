@@ -1,15 +1,17 @@
 import { localDb } from "@/lib/db/local";
 import { useUIStore } from "@/lib/stores/ui";
 import { useTRPC } from "@/utils/trpc";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useRef, useState } from "react";
+import { useSyncMessages } from "./useSync";
 
 export function useChat(conversationId: string | null) {
 	const { setStreamingMessageId, streamingMessageId } = useUIStore();
 	const [currentResponse, setCurrentResponse] = useState("");
 	const responseRef = useRef("");
 	const trpc = useTRPC();
+	useSyncMessages(conversationId || undefined);
 
 	const localMessages = useLiveQuery(
 		() =>
@@ -22,34 +24,6 @@ export function useChat(conversationId: string | null) {
 		[conversationId],
 	);
 
-	const { data: serverMessages } = useQuery(
-		trpc.chat.getMessages.queryOptions(
-			{ conversationId: conversationId! },
-			{
-				enabled: !!conversationId,
-				staleTime: 1000 * 60 * 5,
-			},
-		),
-	);
-
-	useEffect(() => {
-		if (serverMessages?.length && conversationId) {
-			const syncMessages = async () => {
-				for (const serverMessage of serverMessages) {
-					await localDb.messages.put({
-						id: serverMessage.id,
-						conversationId: serverMessage.conversationId,
-						role: serverMessage.role as "user" | "assistant",
-						content: serverMessage.content,
-						createdAt: new Date(serverMessage.createdAt),
-						syncStatus: "synced",
-					});
-				}
-			};
-			syncMessages();
-		}
-	}, [serverMessages, conversationId]);
-
 	const createMessageMutation = useMutation(
 		trpc.chat.createMessage.mutationOptions({
 			onSuccess: async (data) => {
@@ -58,6 +32,8 @@ export function useChat(conversationId: string | null) {
 					conversationId: data.userMessage.conversationId,
 					role: "user",
 					content: data.userMessage.content,
+					metadata: data.userMessage.metadata,
+					tokens: data.userMessage.tokens,
 					createdAt: new Date(data.userMessage.createdAt),
 					syncStatus: "synced",
 				});
@@ -67,6 +43,8 @@ export function useChat(conversationId: string | null) {
 					conversationId: data.assistantMessage.conversationId,
 					role: "assistant",
 					content: data.assistantMessage.content,
+					metadata: data.assistantMessage.metadata,
+					tokens: data.assistantMessage.tokens,
 					createdAt: new Date(data.assistantMessage.createdAt),
 					syncStatus: "synced",
 				});

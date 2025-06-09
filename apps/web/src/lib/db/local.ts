@@ -4,8 +4,8 @@ export interface LocalProject {
 	id: string;
 	userId: string;
 	title: string;
-	description?: string;
-	settings?: string;
+	description: string | null;
+	settings: string | null;
 	isArchived: boolean;
 	createdAt: Date;
 	updatedAt: Date;
@@ -26,18 +26,18 @@ export interface LocalMessage {
 	conversationId: string;
 	role: "user" | "assistant";
 	content: string;
-	metadata?: string;
-	tokens?: string;
+	metadata: string | null;
+	tokens: string | null;
 	createdAt: Date;
 	syncStatus: "synced" | "pending" | "failed";
 }
 
 export interface LocalUser {
 	id: string;
-	name: string;
+	name: string | null;
 	email: string;
 	emailVerified: boolean;
-	image?: string;
+	image: string | null;
 	createdAt: Date;
 	updatedAt: Date;
 	syncStatus: "synced" | "pending" | "failed";
@@ -54,10 +54,11 @@ export class LocalChatDB extends Dexie {
 
 		this.version(1).stores({
 			projects:
-				"id, userId, title, isArchived, createdAt, updatedAt, syncStatus",
+				"id, userId, title, description, settings, isArchived, createdAt, updatedAt, syncStatus",
 			conversations: "id, projectId, title, createdAt, updatedAt, syncStatus",
-			messages: "id, conversationId, role, createdAt, syncStatus",
-			users: "id, email, emailVerified, syncStatus",
+			messages:
+				"id, conversationId, role, metadata, tokens, createdAt, syncStatus",
+			users: "id, name, email, emailVerified, image, syncStatus",
 		});
 	}
 }

@@ -2,6 +2,7 @@ import { z } from "zod";
 
 export const createConversationDto = z.object({
 	title: z.string().min(1).max(255),
+	projectId: z.string().uuid(),
 });
 
 export const conversationParamsDto = z.object({

@@ -5,14 +5,44 @@ import {
 	createConversationDto,
 	createMessageDto,
 	createMessageStreamDto,
+	createProjectDto,
 	deleteConversationDto,
 	getMessagesDto,
+	projectParamsDto,
+	updateProjectDto,
 } from "./dto";
 
 export const chatRouter = router({
-	listConversations: protectedProcedure.query(async ({ ctx }) => {
-		return await chatService.listConversations(ctx.session.user.id);
+	listProjects: protectedProcedure.query(async ({ ctx }) => {
+		return await chatService.listProjects(ctx.session.user.id);
 	}),
+
+	createProject: protectedProcedure
+		.input(createProjectDto)
+		.mutation(async ({ input, ctx }) => {
+			return await chatService.createProject(input, ctx.session.user.id);
+		}),
+
+	updateProject: protectedProcedure
+		.input(updateProjectDto)
+		.mutation(async ({ input, ctx }) => {
+			return await chatService.updateProject(input, ctx.session.user.id);
+		}),
+
+	deleteProject: protectedProcedure
+		.input(projectParamsDto)
+		.mutation(async ({ input, ctx }) => {
+			return await chatService.deleteProject(input, ctx.session.user.id);
+		}),
+
+	listConversations: protectedProcedure
+		.input(projectParamsDto)
+		.query(async ({ input, ctx }) => {
+			return await chatService.listConversations(
+				input.projectId,
+				ctx.session.user.id,
+			);
+		}),
 
 	createConversation: protectedProcedure
 		.input(createConversationDto)

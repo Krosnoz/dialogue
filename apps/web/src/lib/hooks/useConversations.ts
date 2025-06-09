@@ -1,23 +1,26 @@
 import { type LocalConversation, localDb } from "@/lib/db/local";
 import { useUIStore } from "@/lib/stores/ui";
 import { useTRPC } from "@/utils/trpc";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
 import { useLiveQuery } from "dexie-react-hooks";
-import { useCallback, useEffect } from "react";
+import { useCallback } from "react";
+import { useSyncConversations } from "./useSync";
 
-export function useConversations() {
+export function useConversations(projectId?: string) {
 	const { setCurrentConversationId } = useUIStore();
 	const trpc = useTRPC();
+	useSyncConversations(projectId);
 
 	const localConversations = useLiveQuery(
-		() => localDb.conversations.orderBy("updatedAt").reverse().toArray(),
-		[],
-	);
-
-	const { data: serverConversations, refetch } = useQuery(
-		trpc.chat.listConversations.queryOptions(undefined, {
-			staleTime: 1000 * 60 * 2,
-		}),
+		() =>
+			projectId
+				? localDb.conversations
+						.where("projectId")
+						.equals(projectId)
+						.reverse()
+						.sortBy("updatedAt")
+				: localDb.conversations.orderBy("updatedAt").reverse().toArray(),
+		[projectId],
 	);
 
 	const createConversationMutation = useMutation(
@@ -49,31 +52,13 @@ export function useConversations() {
 		}),
 	);
 
-	useEffect(() => {
-		if (serverConversations?.length) {
-			const syncConversations = async () => {
-				for (const serverConversation of serverConversations) {
-					await localDb.conversations.put({
-						id: serverConversation.conversation.id,
-						projectId: serverConversation.conversation.projectId,
-						title: serverConversation.conversation.title,
-						createdAt: new Date(serverConversation.conversation.createdAt),
-						updatedAt: new Date(serverConversation.conversation.updatedAt),
-						syncStatus: "synced",
-					});
-				}
-			};
-			syncConversations();
-		}
-	}, [serverConversations]);
-
 	const createConversation = useCallback(
-		async (title: string) => {
+		async (title: string, projectId: string) => {
 			try {
 				const tempId = `temp-${Date.now()}`;
 				const tempConversation: LocalConversation = {
 					id: tempId,
-					projectId: "temp-project",
+					projectId,
 					title,
 					createdAt: new Date(),
 					updatedAt: new Date(),
@@ -83,7 +68,10 @@ export function useConversations() {
 				await localDb.conversations.put(tempConversation);
 				setCurrentConversationId(tempId);
 
-				const result = await createConversationMutation.mutateAsync({ title });
+				const result = await createConversationMutation.mutateAsync({
+					title,
+					projectId,
+				});
 
 				await localDb.conversations.delete(tempId);
 
@@ -114,6 +102,5 @@ export function useConversations() {
 		deleteConversation,
 		isCreating: createConversationMutation.isPending,
 		isDeleting: deleteConversationMutation.isPending,
-		refetch,
 	};
 }

@@ -10,65 +10,56 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { useConversations } from "@/lib/hooks/useConversations";
+import { useProjects } from "@/lib/hooks/useProjects";
 import { useUIStore } from "@/lib/stores/ui";
 import { cn } from "@/lib/utils";
 import {
 	Edit,
+	FolderOpen,
 	Loader2,
-	MessageSquare,
 	MoreHorizontal,
 	Plus,
 	Trash2,
 } from "lucide-react";
 import { useState } from "react";
 
-interface ConversationListProps {
-	projectId?: string;
-}
-
-export function ConversationList({ projectId }: ConversationListProps) {
-	const { conversations, createConversation, deleteConversation, isCreating } =
-		useConversations(projectId);
-
-	const { currentConversationId, setCurrentConversationId, sidebarOpen } =
-		useUIStore();
+export function ProjectList() {
+	const { projects, createProject, deleteProject, isCreating } = useProjects();
+	const { currentProjectId, setCurrentProjectId } = useUIStore();
 
 	const [isCreatingNew, setIsCreatingNew] = useState(false);
 	const [newTitle, setNewTitle] = useState("");
+	const [newDescription, setNewDescription] = useState("");
 
-	const handleCreateConversation = async () => {
-		if (!newTitle.trim() || !projectId) return;
+	const handleCreateProject = async () => {
+		if (!newTitle.trim()) return;
 
 		try {
-			await createConversation(newTitle.trim(), projectId);
+			await createProject(newTitle.trim(), newDescription.trim() || undefined);
 			setNewTitle("");
+			setNewDescription("");
 			setIsCreatingNew(false);
 		} catch (error) {
-			console.error("Failed to create conversation:", error);
+			console.error("Failed to create project:", error);
 		}
 	};
 
-	const handleDeleteConversation = async (conversationId: string) => {
+	const handleDeleteProject = async (projectId: string) => {
 		try {
-			await deleteConversation(conversationId);
-			if (currentConversationId === conversationId) {
-				setCurrentConversationId(null);
+			await deleteProject(projectId);
+			if (currentProjectId === projectId) {
+				setCurrentProjectId(null);
 			}
 		} catch (error) {
-			console.error("Failed to delete conversation:", error);
+			console.error("Failed to delete project:", error);
 		}
 	};
-
-	if (!sidebarOpen || !projectId) {
-		return null;
-	}
 
 	return (
 		<Card className="flex h-full w-80 flex-col border-r">
 			<div className="border-b p-4">
 				<div className="mb-4 flex items-center justify-between">
-					<h2 className="font-semibold text-lg">Conversations</h2>
+					<h2 className="font-semibold text-lg">Projects</h2>
 					<Button
 						size="sm"
 						onClick={() => setIsCreatingNew(true)}
@@ -87,21 +78,36 @@ export function ConversationList({ projectId }: ConversationListProps) {
 						<Input
 							value={newTitle}
 							onChange={(e) => setNewTitle(e.target.value)}
-							placeholder="Conversation title..."
+							placeholder="Project title..."
 							onKeyDown={(e) => {
 								if (e.key === "Enter") {
-									handleCreateConversation();
+									handleCreateProject();
 								} else if (e.key === "Escape") {
 									setIsCreatingNew(false);
 									setNewTitle("");
+									setNewDescription("");
 								}
 							}}
 							autoFocus
 						/>
+						<Input
+							value={newDescription}
+							onChange={(e) => setNewDescription(e.target.value)}
+							placeholder="Description (optional)..."
+							onKeyDown={(e) => {
+								if (e.key === "Enter") {
+									handleCreateProject();
+								} else if (e.key === "Escape") {
+									setIsCreatingNew(false);
+									setNewTitle("");
+									setNewDescription("");
+								}
+							}}
+						/>
 						<div className="flex gap-2">
 							<Button
 								size="sm"
-								onClick={handleCreateConversation}
+								onClick={handleCreateProject}
 								disabled={!newTitle.trim()}
 							>
 								Create
@@ -112,6 +118,7 @@ export function ConversationList({ projectId }: ConversationListProps) {
 								onClick={() => {
 									setIsCreatingNew(false);
 									setNewTitle("");
+									setNewDescription("");
 								}}
 							>
 								Cancel
@@ -123,34 +130,39 @@ export function ConversationList({ projectId }: ConversationListProps) {
 
 			<ScrollArea className="flex-1">
 				<div className="space-y-1 p-2">
-					{conversations.length === 0 ? (
+					{projects.length === 0 ? (
 						<div className="py-8 text-center text-muted-foreground">
-							<MessageSquare className="mx-auto mb-2 h-8 w-8 opacity-50" />
-							<p className="text-sm">No conversations</p>
+							<FolderOpen className="mx-auto mb-2 h-8 w-8 opacity-50" />
+							<p className="text-sm">No projects</p>
 						</div>
 					) : (
-						conversations.map((conversation) => (
+						projects.map((project) => (
 							// biome-ignore lint/a11y/useKeyWithClickEvents: <explanation>
 							<div
-								key={conversation.id}
+								key={project.id}
 								className={cn(
 									"group flex cursor-pointer items-center gap-2 rounded-lg p-3 transition-colors hover:bg-muted",
-									currentConversationId === conversation.id && "bg-muted",
+									currentProjectId === project.id && "bg-muted",
 								)}
-								onClick={() => setCurrentConversationId(conversation.id)}
+								onClick={() => setCurrentProjectId(project.id)}
 							>
-								<MessageSquare className="h-4 w-4 shrink-0 text-muted-foreground" />
+								<FolderOpen className="h-4 w-4 shrink-0 text-muted-foreground" />
 
 								<div className="min-w-0 flex-1">
 									<p className="truncate font-medium text-sm">
-										{conversation.title}
+										{project.title}
 									</p>
+									{project.description && (
+										<p className="truncate text-muted-foreground text-xs">
+											{project.description}
+										</p>
+									)}
 									<p className="text-muted-foreground text-xs">
-										{conversation.updatedAt.toLocaleDateString()}
+										{project.updatedAt.toLocaleDateString()}
 									</p>
 								</div>
 
-								{conversation.syncStatus === "pending" && (
+								{project.syncStatus === "pending" && (
 									<div className="h-2 w-2 shrink-0 rounded-full bg-yellow-500" />
 								)}
 
@@ -172,7 +184,7 @@ export function ConversationList({ projectId }: ConversationListProps) {
 										</DropdownMenuItem>
 										<DropdownMenuItem
 											className="text-destructive"
-											onClick={() => handleDeleteConversation(conversation.id)}
+											onClick={() => handleDeleteProject(project.id)}
 										>
 											<Trash2 className="mr-2 h-4 w-4" />
 											Delete

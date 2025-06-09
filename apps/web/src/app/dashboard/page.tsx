@@ -2,12 +2,15 @@
 
 import { ChatView } from "@/components/chat/ChatView";
 import { ConversationList } from "@/components/chat/ConversationList";
+import { ProjectList } from "@/components/chat/ProjectList";
 import { Button } from "@/components/ui/button";
+import { useSync } from "@/lib/hooks/useSync";
 import { useUIStore } from "@/lib/stores/ui";
 import { Menu } from "lucide-react";
 
 export default function DashboardPage() {
-	const { sidebarOpen, toggleSidebar } = useUIStore();
+	const { sidebarOpen, toggleSidebar, currentProjectId } = useUIStore();
+	useSync(); // Initialize global sync
 
 	return (
 		<div className="flex h-screen flex-col">
@@ -25,13 +28,16 @@ export default function DashboardPage() {
 				<h1 className="font-semibold text-xl">Dialogue</h1>
 
 				<div className="ml-auto flex items-center gap-2">
-					{/* Boutons d'actions futurs (profil, paramètres, etc.) */}
+					{/* Future action buttons (profile, settings, etc.) */}
 				</div>
 			</header>
 
 			{/* Main content */}
 			<div className="flex flex-1 overflow-hidden">
-				<ConversationList />
+				{sidebarOpen && <ProjectList />}
+				{sidebarOpen && currentProjectId && (
+					<ConversationList projectId={currentProjectId} />
+				)}
 				<ChatView />
 			</div>
 		</div>
