@@ -1,8 +1,8 @@
+import { chatSchema, db } from "@dialogue/db";
 import { TRPCError } from "@trpc/server";
 import { observable } from "@trpc/server/observable";
 import { and, desc, eq } from "drizzle-orm";
 import { z } from "zod";
-import { chatSchema, db } from "../db";
 import { protectedProcedure, router } from "../lib/trpc";
 
 export const chatRouter = router({

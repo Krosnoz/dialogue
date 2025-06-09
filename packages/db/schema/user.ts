@@ -1,23 +1,22 @@
-import { boolean, pgTable, serial, text, timestamp } from "drizzle-orm/pg-core";
+import { boolean, pgTable, text, timestamp } from "drizzle-orm/pg-core";
 
 export const user = pgTable("user", {
 	id: text("id").primaryKey(),
 	name: text("name").notNull(),
 	email: text("email").notNull().unique(),
-	emailVerified: boolean("email_verified").notNull(),
+	emailVerified: boolean("email_verified").notNull().default(false),
 	image: text("image"),
-	stripeCustomerId: text("stripe_customer_id").unique(),
 	subscriptionStatus: text("subscription_status").default("free"),
-	createdAt: timestamp("created_at").notNull(),
-	updatedAt: timestamp("updated_at").notNull(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const session = pgTable("session", {
 	id: text("id").primaryKey(),
 	expiresAt: timestamp("expires_at").notNull(),
 	token: text("token").notNull().unique(),
-	createdAt: timestamp("created_at").notNull(),
-	updatedAt: timestamp("updated_at").notNull(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	updatedAt: timestamp("updated_at").notNull().defaultNow(),
 	ipAddress: text("ip_address"),
 	userAgent: text("user_agent"),
 	userId: text("user_id")
@@ -39,8 +38,8 @@ export const account = pgTable("account", {
 	refreshTokenExpiresAt: timestamp("refresh_token_expires_at"),
 	scope: text("scope"),
 	password: text("password"),
-	createdAt: timestamp("created_at").notNull(),
-	updatedAt: timestamp("updated_at").notNull(),
+	createdAt: timestamp("created_at").notNull().defaultNow(),
+	updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 export const verification = pgTable("verification", {
@@ -48,6 +47,17 @@ export const verification = pgTable("verification", {
 	identifier: text("identifier").notNull(),
 	value: text("value").notNull(),
 	expiresAt: timestamp("expires_at").notNull(),
-	createdAt: timestamp("created_at"),
-	updatedAt: timestamp("updated_at"),
+	createdAt: timestamp("created_at").defaultNow(),
+	updatedAt: timestamp("updated_at").defaultNow(),
 });
+
+export type UserTypeSelect = typeof user.$inferSelect;
+export type UserTypeInsert = typeof user.$inferInsert;
+
+export type SessionTypeSelect = typeof session.$inferSelect;
+export type SessionTypeInsert = typeof session.$inferInsert;
+
+export type AccountTypeSelect = typeof account.$inferSelect;
+export type AccountTypeInsert = typeof account.$inferInsert;
+
+export type VerificationTypeSelect = typeof verification.$inferSelect;

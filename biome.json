@@ -33,6 +33,9 @@
 			"correctness": {
 				"useExhaustiveDependencies": "info"
 			},
+			"style": {
+				"noNonNullAssertion": "off"
+			},
 			"nursery": {
 				"useSortedClasses": {
 					"level": "warn",

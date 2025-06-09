@@ -1,0 +1,28 @@
+{
+	"name": "@dialogue/db",
+	"version": "0.0.0",
+	"private": true,
+	"main": "./index.ts",
+	"types": "./index.ts",
+	"exports": {
+		".": "./index.ts",
+		"./schema": "./schema/index.ts"
+	},
+	"scripts": {
+		"init": "shx cp .env.example .env",
+		"db:generate": "drizzle-kit generate",
+		"db:migrate": "drizzle-kit migrate",
+		"db:push": "drizzle-kit push",
+		"db:studio": "drizzle-kit studio"
+	},
+	"dependencies": {
+		"@neondatabase/serverless": "^1.0.1",
+		"dotenv": "^16.5.0",
+		"drizzle-orm": "^0.44.2"
+	},
+	"devDependencies": {
+		"drizzle-kit": "^0.31.1",
+		"shx": "^0.4.0",
+		"typescript": "^5.8.2"
+	}
+}

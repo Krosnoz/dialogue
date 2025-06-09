@@ -1,0 +1,22 @@
+{
+	"name": "@dialogue/auth",
+	"version": "1.0.0",
+	"main": "./index.ts",
+	"types": "./index.ts",
+	"scripts": {
+		"check-types": "tsc --noEmit"
+	},
+	"dependencies": {
+		"better-auth": "^1.2.8",
+		"@dialogue/db": "workspace:*",
+		"drizzle-orm": "^0.32.2"
+	},
+	"devDependencies": {
+		"typescript": "^5.8.2",
+		"@types/bun": "^1.2.6"
+	},
+	"exports": {
+		".": "./index.ts",
+		"./client": "./src/client.ts"
+	}
+}
