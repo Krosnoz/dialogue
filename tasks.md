@@ -106,4 +106,22 @@ This document outlines the tasks required to implement the T3 Chat application b
 - [ ] Implement feature flags system.
 - [ ] Implement data export/import.
 - [ ] User onboarding.
-- [ ] And other items from the "Advanced Features" list. 
+- [ ] And other items from the "Advanced Features" list.
+
+---
+
+## Milestone 9: Scalability & Observability (4-6 days)
+
+- [ ] Store authentication sessions in Redis so they persist across multiple server instances.
+- [ ] Introduce WebSocket/SSE endpoints for real-time chat streaming.
+- [ ] Use a message queue (e.g., RabbitMQ or Kafka) to process AI requests asynchronously.
+- [ ] Separate static front-end and API services to allow independent scaling.
+- [ ] Add a search/index layer (vector store or NoSQL) for fast history lookup.
+- [ ] Enable structured logging and monitoring (Sentry, OpenTelemetry).
+
+---
+
+## Milestone 10: Local Docker Environment (1 day)
+
+- [ ] Provide a `docker-compose.yml` with services for PostgreSQL and Redis.
+- [ ] Document how to start and stop the containers for local development.

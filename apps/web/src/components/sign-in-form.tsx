@@ -18,8 +18,8 @@ export default function SignInForm({
 
 	const form = useForm({
 		defaultValues: {
-			email: "",
-			password: "",
+			email: "admin@dialogue.fr",
+			password: "Dialogue2025",
 		},
 		onSubmit: async ({ value }) => {
 			await authClient.signIn.email(
