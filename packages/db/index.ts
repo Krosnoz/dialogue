@@ -11,4 +11,4 @@ const sql = neon(process.env.DATABASE_URL);
 export const db = drizzle({ client: sql });
 
 export * from "./schema";
-export { and, desc, eq } from "drizzle-orm";
+export { and, desc, eq, cosineDistance, sql } from "drizzle-orm";

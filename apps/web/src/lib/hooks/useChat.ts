@@ -2,6 +2,7 @@ import { localDb } from "@/lib/db/local";
 import { useUIStore } from "@/lib/stores/ui";
 import { useTRPC } from "@/utils/trpc";
 import { useMutation } from "@tanstack/react-query";
+import { useSubscription } from "@trpc/tanstack-react-query";
 import { useLiveQuery } from "dexie-react-hooks";
 import { useCallback, useRef, useState } from "react";
 import { useSyncMessages } from "./useSync";
@@ -38,18 +39,7 @@ export function useChat(conversationId: string | null) {
 					syncStatus: "synced",
 				});
 
-				await localDb.messages.put({
-					id: data.assistantMessage.id,
-					conversationId: data.assistantMessage.conversationId,
-					role: "assistant",
-					content: data.assistantMessage.content,
-					metadata: data.assistantMessage.metadata,
-					tokens: data.assistantMessage.tokens,
-					createdAt: new Date(data.assistantMessage.createdAt),
-					syncStatus: "synced",
-				});
-
-				setStreamingMessageId(null);
+				setStreamingMessageId("ai-responding");
 			},
 			onError: (error) => {
 				console.error("Failed to send message:", error);
@@ -58,22 +48,61 @@ export function useChat(conversationId: string | null) {
 		}),
 	);
 
+	useSubscription(
+		trpc.chat.onMessage.subscriptionOptions(
+			{
+				conversationId: conversationId!,
+			},
+			{
+				enabled: !!conversationId,
+				// @ts-expect-error TODO: fix this
+				onData: async (data: {
+					type: string;
+					content: string;
+					messageId?: string;
+				}) => {
+					if (data.type === "ai_chunk") {
+						responseRef.current += data.content;
+						setCurrentResponse(responseRef.current);
+					} else if (data.type === "ai_complete") {
+						await localDb.messages.put({
+							id: data.messageId!,
+							conversationId: conversationId!,
+							role: "assistant",
+							content: data.content,
+							metadata: null,
+							tokens: null,
+							createdAt: new Date(),
+							syncStatus: "synced",
+						});
+						setCurrentResponse("");
+						responseRef.current = "";
+						setStreamingMessageId(null);
+					}
+				},
+				onError: (err) => {
+					console.error("Streaming error:", err);
+					setStreamingMessageId(null);
+					setCurrentResponse("An error occurred. Please try again.");
+					responseRef.current = "";
+				},
+			},
+		),
+	);
+
 	const sendMessage = useCallback(
 		async (content: string) => {
 			if (!conversationId || !content.trim()) return;
 
-			setStreamingMessageId("sending");
+			setCurrentResponse("");
+			responseRef.current = "";
 
-			try {
-				await createMessageMutation.mutateAsync({
-					conversationId,
-					content,
-				});
-			} catch (error) {
-				console.error("Failed to send message:", error);
-			}
+			await createMessageMutation.mutateAsync({
+				conversationId,
+				content,
+			});
 		},
-		[conversationId, createMessageMutation, setStreamingMessageId],
+		[conversationId, createMessageMutation],
 	);
 
 	return {

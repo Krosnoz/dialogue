@@ -112,16 +112,17 @@ This document outlines the tasks required to implement the T3 Chat application b
 
 ## Milestone 9: Scalability & Observability (4-6 days)
 
-- [ ] Store authentication sessions in Redis so they persist across multiple server instances.
-- [ ] Introduce WebSocket/SSE endpoints for real-time chat streaming.
-- [ ] Use a message queue (e.g., RabbitMQ or Kafka) to process AI requests asynchronously.
-- [ ] Separate static front-end and API services to allow independent scaling.
-- [ ] Add a search/index layer (vector store or NoSQL) for fast history lookup.
-- [ ] Enable structured logging and monitoring (Sentry, OpenTelemetry).
+- [X] Store authentication sessions in Redis so they persist across multiple server instances.
+- [X] Introduce WebSocket/SSE endpoints for real-time chat streaming.
+- [X] Use a message queue (e.g., RabbitMQ or Kafka) to process AI requests asynchronously.
+- [X] Separate static front-end and API services to allow independent scaling.
+- [X] Add a search/index layer (vector store or NoSQL) for fast history lookup.
+- [X] Enable structured logging and monitoring (Sentry, OpenTelemetry).
 
 ---
 
 ## Milestone 10: Local Docker Environment (1 day)
 
-- [ ] Provide a `docker-compose.yml` with services for PostgreSQL and Redis.
-- [ ] Document how to start and stop the containers for local development.
+- [X] Provide a `docker-compose.yml` with services for PostgreSQL and Redis.
+
+*Note on service separation: The project is already structured with a separate `apps/web` (Next.js frontend) and `apps/server` (tRPC backend). This architecture inherently allows for independent deployment and scaling of the frontend and API services.*

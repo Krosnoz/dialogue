@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { protectedProcedure, router } from "../../lib/trpc";
 import { chatService } from "./chat.service";
 import {
@@ -9,6 +10,7 @@ import {
 	deleteConversationDto,
 	getMessagesDto,
 	projectParamsDto,
+	searchMessagesDto,
 	updateProjectDto,
 } from "./dto";
 
@@ -62,10 +64,16 @@ export const chatRouter = router({
 			return await chatService.createMessage(input, ctx.session.user.id);
 		}),
 
-	createMessageStream: protectedProcedure
-		.input(createMessageStreamDto)
-		.subscription(async ({ input, ctx }) => {
-			return chatService.createMessageStream(input, ctx.session.user.id);
+	onMessage: protectedProcedure
+		.input(z.object({ conversationId: z.string() }))
+		.subscription(async function* ({ input, signal }) {
+			yield* chatService.onMessage(input, signal);
+		}),
+
+	searchMessages: protectedProcedure
+		.input(searchMessagesDto)
+		.query(async ({ input, ctx }) => {
+			return chatService.searchMessages(input, ctx.session.user.id);
 		}),
 
 	deleteConversation: protectedProcedure

@@ -1,10 +1,12 @@
 import {
 	boolean,
+	index,
 	pgTable,
 	text,
 	timestamp,
 	uuid,
 	varchar,
+	vector,
 } from "drizzle-orm/pg-core";
 import { user } from "./user";
 
@@ -31,17 +33,27 @@ export const conversation = pgTable("conversation", {
 	updatedAt: timestamp("updated_at").defaultNow().notNull(),
 });
 
-export const message = pgTable("message", {
-	id: uuid("id").primaryKey().defaultRandom(),
-	conversationId: uuid("conversation_id")
-		.references(() => conversation.id, { onDelete: "cascade" })
-		.notNull(),
-	role: varchar("role", { length: 10 }).notNull(),
-	content: text("content").notNull(),
-	metadata: text("metadata"),
-	tokens: text("tokens"),
-	createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+export const message = pgTable(
+	"message",
+	{
+		id: uuid("id").primaryKey().defaultRandom(),
+		conversationId: uuid("conversation_id")
+			.references(() => conversation.id, { onDelete: "cascade" })
+			.notNull(),
+		role: varchar("role", { length: 10 }).notNull(),
+		content: text("content").notNull(),
+		metadata: text("metadata"),
+		tokens: text("tokens"),
+		embedding: vector("embedding", { dimensions: 1536 }),
+		createdAt: timestamp("created_at").defaultNow().notNull(),
+	},
+	(table) => [
+		index("embedding_index").using(
+			"hnsw",
+			table.embedding.op("vector_cosine_ops"),
+		),
+	],
+);
 
 export type ProjectTypeSelect = typeof project.$inferSelect;
 export type ProjectTypeInsert = typeof project.$inferInsert;

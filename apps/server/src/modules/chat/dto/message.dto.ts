@@ -14,6 +14,12 @@ export const createMessageStreamDto = z.object({
 	content: z.string().min(1),
 });
 
+export const searchMessagesDto = z.object({
+	conversationId: z.string().uuid(),
+	query: z.string().min(1),
+});
+
 export type GetMessagesDto = z.infer<typeof getMessagesDto>;
 export type CreateMessageDto = z.infer<typeof createMessageDto>;
 export type CreateMessageStreamDto = z.infer<typeof createMessageStreamDto>;
+export type SearchMessagesDto = z.infer<typeof searchMessagesDto>;

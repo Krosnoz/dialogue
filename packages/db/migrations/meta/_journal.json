@@ -8,6 +8,20 @@
 			"when": 1749506969490,
 			"tag": "0000_worthless_ben_grimm",
 			"breakpoints": true
+		},
+		{
+			"idx": 1,
+			"version": "7",
+			"when": 1749544090091,
+			"tag": "0001_tidy_supernaut",
+			"breakpoints": true
+		},
+		{
+			"idx": 2,
+			"version": "7",
+			"when": 1749545817454,
+			"tag": "0002_narrow_sleepwalker",
+			"breakpoints": true
 		}
 	]
 }

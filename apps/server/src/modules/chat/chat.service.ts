@@ -1,8 +1,13 @@
 import { conversation, db, message, project } from "@dialogue/db";
-import { and, desc, eq } from "@dialogue/db";
+import { and, cosineDistance, desc, eq, sql } from "@dialogue/db";
 import { TRPCError } from "@trpc/server";
-import { observable } from "@trpc/server/observable";
-import type { Context } from "../../lib/context";
+import {
+	type ChatMessage,
+	chatService as openaiChatService,
+} from "../../lib/ai/chat.service";
+import { generateEmbedding } from "../../lib/ai/embedding.service";
+import { chatQueue } from "../../lib/queue";
+import redis from "../../lib/redis";
 import type {
 	ConversationParamsDto,
 	CreateConversationDto,
@@ -12,6 +17,7 @@ import type {
 	DeleteConversationDto,
 	GetMessagesDto,
 	ProjectParamsDto,
+	SearchMessagesDto,
 	UpdateProjectDto,
 } from "./dto";
 
@@ -162,123 +168,114 @@ export class ChatService {
 			});
 		}
 
+		const embedding = await generateEmbedding(input.content);
+
 		const [userMessage] = await db
 			.insert(message)
 			.values({
 				conversationId: conversationInDb[0].conversation.id,
 				role: "user",
 				content: input.content,
+				embedding: embedding,
 			})
 			.returning();
 
-		const aiResponse = `Merci pour votre message: "${input.content}". Voici ma réponse simulée.`;
-
-		const [assistantMessage] = await db
-			.insert(message)
-			.values({
-				conversationId: conversationInDb[0].conversation.id,
-				role: "assistant",
-				content: aiResponse,
-			})
-			.returning();
+		// Queue the AI response generation
+		await chatQueue.add("generate-response", {
+			conversationId: input.conversationId,
+			content: input.content,
+		});
 
 		await this.updateConversationTimestamp(input.conversationId);
 
-		return {
-			userMessage,
-			assistantMessage,
-		};
+		return { userMessage };
 	}
 
-	createMessageStream(input: CreateMessageStreamDto, userId: string) {
-		return observable<{
-			type: "user_message" | "ai_chunk" | "ai_complete";
-			content: string;
-			messageId?: string;
-		}>((emit) => {
-			(async () => {
-				try {
-					const conversationInDb = await db
-						.select()
-						.from(conversation)
-						.innerJoin(project, eq(conversation.projectId, project.id))
-						.where(
-							and(
-								eq(conversation.id, input.conversationId),
-								eq(project.userId, userId),
-							),
-						)
-						.limit(1);
+	async *onMessage(input: { conversationId: string }, signal?: AbortSignal) {
+		const channel = `chat:${input.conversationId}`;
+		const subscriber = redis.duplicate();
 
-					if (!conversationInDb.length) {
-						throw new TRPCError({
-							code: "NOT_FOUND",
-							message: "Conversation not found",
-						});
+		try {
+			// Subscribe to the Redis channel
+			await subscriber.subscribe(channel);
+
+			// Create a queue to buffer messages
+			const messageQueue: ChatMessage[] = [];
+			let resolveNext: (() => void) | null = null;
+
+			// Handle incoming messages
+			subscriber.on("message", (ch, message) => {
+				if (ch === channel) {
+					try {
+						const data = JSON.parse(message);
+						if (data.type === "ai_chunk" || data.type === "ai_complete") {
+							messageQueue.push(data);
+							if (resolveNext) {
+								resolveNext();
+								resolveNext = null;
+							}
+						}
+					} catch (error) {
+						console.error("Failed to parse message:", error);
 					}
-
-					const [userMessage] = await db
-						.insert(message)
-						.values({
-							conversationId: conversationInDb[0].conversation.id,
-							role: "user",
-							content: input.content,
-						})
-						.returning();
-
-					emit.next({
-						type: "user_message",
-						content: userMessage.content,
-						messageId: userMessage.id,
-					});
-
-					let aiResponse = "";
-					const chunks = [
-						"Je comprends votre question.",
-						" Laissez-moi réfléchir à cela...",
-						" Voici ma réponse détaillée :",
-						" Cette solution devrait résoudre votre problème.",
-					];
-
-					for (const chunk of chunks) {
-						await new Promise((resolve) => setTimeout(resolve, 500));
-						aiResponse += chunk;
-						emit.next({
-							type: "ai_chunk",
-							content: chunk,
-						});
-					}
-
-					const [assistantMessage] = await db
-						.insert(message)
-						.values({
-							conversationId: conversationInDb[0].conversation.id,
-							role: "assistant",
-							content: aiResponse,
-						})
-						.returning();
-
-					await this.updateConversationTimestamp(input.conversationId);
-
-					emit.next({
-						type: "ai_complete",
-						content: aiResponse,
-						messageId: assistantMessage.id,
-					});
-
-					emit.complete();
-				} catch (error) {
-					emit.error(
-						error instanceof TRPCError
-							? error
-							: new TRPCError({
-									code: "INTERNAL_SERVER_ERROR",
-									message: "Failed to process message",
-								}),
-					);
 				}
-			})();
-		});
+			});
+
+			// Handle abort signal
+			if (signal) {
+				signal.addEventListener("abort", () => {
+					subscriber.unsubscribe(channel);
+					subscriber.quit();
+				});
+			}
+
+			// Yield messages as they arrive
+			while (!signal?.aborted) {
+				if (messageQueue.length > 0) {
+					yield messageQueue.shift();
+				} else {
+					// Wait for the next message
+					await new Promise<void>((resolve) => {
+						resolveNext = resolve;
+						// Add a timeout to prevent infinite waiting
+						setTimeout(resolve, 30000); // 30 second timeout
+					});
+				}
+			}
+		} finally {
+			subscriber.unsubscribe(channel);
+			subscriber.quit();
+		}
+	}
+
+	async searchMessages(input: SearchMessagesDto, userId: string) {
+		const embedding = await generateEmbedding(input.query);
+		const similarity = sql<number>`1 - (${cosineDistance(
+			message.embedding,
+			embedding,
+		)})`;
+
+		const results = await db
+			.select({
+				id: message.id,
+				content: message.content,
+				role: message.role,
+				createdAt: message.createdAt,
+				similarity,
+			})
+			.from(message)
+			.innerJoin(conversation, eq(message.conversationId, conversation.id))
+			.innerJoin(project, eq(conversation.projectId, project.id))
+			.where(
+				and(
+					eq(project.userId, userId),
+					eq(conversation.id, input.conversationId),
+				),
+			)
+			.orderBy(desc(similarity))
+			.limit(10);
+
+		return results;
 	}
 
 	async deleteConversation(input: DeleteConversationDto, userId: string) {
