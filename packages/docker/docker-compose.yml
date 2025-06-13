@@ -1,24 +1,20 @@
-version: '3.8'
 services:
-  postgres:
-    image: postgres:17-alpine
-    container_name: dialogue-postgres-container
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: dialogue
+  db:
+    image: neondatabase/neon_local:latest
+    container_name: dialogue-db
+    env_file:
+      - .env
     ports:
-      - "5432:5432"
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-
-  redis:
+      - '5432:5432'
+    environment:
+      NEON_API_KEY: ${NEON_API_KEY}
+      NEON_PROJECT_ID: ${NEON_PROJECT_ID}
+      DRIVER: serverless
+  cache:
     image: redis:8-alpine
-    container_name: dialogue-redis-container
+    container_name: dialogue-cache
+    env_file:
+      - .env
     restart: unless-stopped
     ports:
       - "6379:6379"
-
-volumes:
-  postgres_data:

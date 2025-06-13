@@ -6,8 +6,8 @@
 		"init": "cd ../.. && shx cp apps/server/.env.example apps/server/.env",
 		"build": "cd ../.. && tsc --project apps/server/tsconfig.json && tsc-alias -p apps/server/tsconfig.json",
 		"check-types": "cd ../.. && tsc --noEmit -p apps/server",
-		"dev": "bun run --hot src/index.ts",
-		"start": "bun run dist/src/index.js",
+		"dev": "cross-env NODE_ENV=development bun run --hot src/index.ts",
+		"start": "cross-env NODE_ENV=production bun run dist/src/index.js",
 		"worker": "bun run --hot src/workers/chat.worker.ts"
 	},
 	"dependencies": {
@@ -24,6 +24,7 @@
 		"zod": "^3.25.16"
 	},
 	"devDependencies": {
-		"@types/bun": "^1.2.6"
+		"@types/bun": "^1.2.6",
+		"cross-env": "^7.0.3"
 	}
 }
