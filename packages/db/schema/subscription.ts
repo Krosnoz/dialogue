@@ -17,6 +17,7 @@ export const subscription = pgTable("subscription", {
 	stripePriceId: text("stripe_price_id").notNull(),
 	status: text("status").notNull(),
 	currentPeriodStart: timestamp("current_period_start").notNull(),
+	test: text("test"),
 	currentPeriodEnd: timestamp("current_period_end").notNull(),
 	cancelAtPeriodEnd: boolean("cancel_at_period_end").notNull().default(false),
 	createdAt: timestamp("created_at").notNull().defaultNow(),
