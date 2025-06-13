@@ -39,6 +39,11 @@ jobs:
       || github.event.action == 'reopened')
     runs-on: ubuntu-latest
     steps:
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
       - name: Create Neon Branch
         id: create_neon_branch
         uses: neondatabase/create-branch-action@v5
@@ -47,7 +52,7 @@ jobs:
           branch_name: preview/pr-${{ github.event.number }}-${{ needs.setup.outputs.branch }}
           api_key: ${{ secrets.NEON_API_KEY }}
 
-      - name: Run Migrations
+      - name: Run Push
         run: bun run db:push
         env:
           DATABASE_URL: "${{ steps.create_neon_branch.outputs.db_url_with_pooler }}"
