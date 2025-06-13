@@ -11,15 +11,18 @@
 	"scripts": {
 		"init": "cd ../.. && shx cp packages/db/.env.example packages/db/.env",
 		"db:generate": "drizzle-kit generate",
-		"db:migrate": "drizzle-kit migrate",
 		"db:push": "drizzle-kit push",
 		"db:studio": "drizzle-kit studio",
+		"db:reset": "bun run scripts/reset.ts",
+		"db:reset-seed": "bun run scripts/reset.ts --seed",
+		"db:branch": "bun run scripts/branch-manager.ts",
 		"check-types": "tsc --noEmit"
 	},
 	"dependencies": {
 		"@neondatabase/serverless": "^1.0.1",
 		"dotenv": "^16.5.0",
 		"drizzle-orm": "^0.44.2",
+		"drizzle-seed": "^0.3.1",
 		"pgvector": "^0.2.1"
 	},
 	"devDependencies": {

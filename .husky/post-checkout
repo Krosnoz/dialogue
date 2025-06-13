@@ -1,0 +1,43 @@
+#!/bin/bash
+
+# Git post-checkout hook to suggest Neon branch cleanup
+# This hook runs after 'git checkout' or 'git switch'
+
+# Get the previous and current branch
+prev_head=$1
+new_head=$2
+branch_switch=$3
+
+# Only proceed if this is a branch switch (not file checkout)
+if [ "$branch_switch" = "1" ]; then
+    current_branch=$(git branch --show-current)
+    
+    # Skip if we're in a detached HEAD state or on dev/main
+    if [ -z "$current_branch" ] || [ "$current_branch" = "dev" ] || [ "$current_branch" = "main" ]; then
+        exit 0
+    fi
+    
+    # Check if there are local Neon branches
+    cd "$(git rev-parse --show-toplevel)/packages/db"
+    
+    if command -v bun >/dev/null 2>&1 && [ -f "scripts/branch-manager.ts" ]; then
+        # Check if there are any local branches
+        local_branches=$(bun run scripts/branch-manager.ts list 2>/dev/null | grep -c "local/" || echo "0")
+        
+        if [ "$local_branches" -gt 0 ]; then
+            echo ""
+            echo "🌿 You have $local_branches local Neon branch(es) active."
+            echo "💡 Consider cleaning up unused branches with: bun db:branch cleanup"
+            echo "📋 List all branches with: bun db:branch list"
+            echo ""
+        fi
+        
+        # Suggest creating a branch for the current Git branch if it doesn't exist
+        if ! bun run scripts/branch-manager.ts list 2>/dev/null | grep -q "local/$current_branch"; then
+            echo "💡 Create a Neon branch for '$current_branch' with: bun db:branch create"
+            echo ""
+        fi
+    fi
+fi
+
+exit 0 

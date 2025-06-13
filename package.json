@@ -11,10 +11,12 @@
 		"dev:native": "turbo -F native dev",
 		"dev:web": "turbo -F web dev",
 		"dev:server": "turbo -F server dev",
-		"db:push": "turbo -F @dialogue/db db:push",
-		"db:studio": "turbo -F @dialogue/db db:studio",
-		"db:generate": "turbo -F @dialogue/db db:generate",
-		"db:migrate": "turbo -F @dialogue/db db:migrate"
+		"db:push": "cd packages/db && bun run db:push",
+		"db:studio": "cd packages/db && bun run db:studio",
+		"db:generate": "cd packages/db && bun run db:generate",
+		"db:reset": "cd packages/db && bun run db:reset",
+		"db:reset-seed": "cd packages/db && bun run db:reset-seed",
+		"db:branch": "cd packages/db && bun run db:branch"
 	},
 	"dependencies": {},
 	"devDependencies": {
